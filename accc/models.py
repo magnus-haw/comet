@@ -276,6 +276,7 @@ class Withdrawals(models.Model):
 
     class Meta:
         unique_together = ('child','room',)
+        verbose_name_plural = "Withdrawals"
 
     def is_fully_processed(self):
         """Checks if all required steps for withdrawal are completed."""

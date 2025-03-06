@@ -6,10 +6,12 @@ from django.http import HttpResponse, JsonResponse
 from django.core.mail import send_mail
 from django.contrib import messages
 from django.views.decorators.http import require_POST
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .models import RoomTransition, Room, Child
 from .forms import RoomTransitionForm
 
+@login_required
 def current_rooms_view(request):
     """
     Displays all rooms with their currently enrolled children, sorted by age.    """
@@ -52,6 +54,7 @@ def current_rooms_view(request):
     return render(request, "accc/current_rooms.html", {"room_data": room_data, "now":now().date()})
 
 # 1. Add a Room Transition
+@login_required
 def add_transition(request, trans_pk=None, child_pk=None):
     """Handles adding new room transitions, editing existing ones, and pre-filling forms for specific children."""
     
@@ -89,6 +92,7 @@ def add_transition(request, trans_pk=None, child_pk=None):
 
 # 2. Send Transition Email
 @require_POST
+@login_required
 def send_transition_email(request, transition_id):
     """Sends a transition email to parents if not already sent."""
     transition = get_object_or_404(RoomTransition, id=transition_id)
@@ -99,6 +103,7 @@ def send_transition_email(request, transition_id):
         messages.warning(request, f"Email already sent for {transition.child}.")
     return redirect('transition_detail', transition_id=transition.id)
 
+@login_required
 def delete_transition(request, trans_pk):
     """Deletes a RoomTransition object if POST request is confirmed."""
     transition = get_object_or_404(RoomTransition, pk=trans_pk)
@@ -113,6 +118,7 @@ def delete_transition(request, trans_pk):
 
 # 3. Implement Transition
 @require_POST
+@login_required
 def implement_transition(request, transition_id):
     """Marks a room transition as complete if all conditions are met."""
     transition = get_object_or_404(RoomTransition, id=transition_id)
@@ -124,12 +130,13 @@ def implement_transition(request, transition_id):
     return redirect('current-rooms')
 
 # 4. Transition Detail View (to show details and action buttons)
+@login_required
 def transition_detail(request, transition_id):
     """Displays details of a specific room transition."""
     transition = get_object_or_404(RoomTransition, id=transition_id)
     return render(request, 'accc/transition_detail.html', {'transition': transition})
 
-
+@login_required
 def future_projection_view(request, year, month):
     """
     Projects what room occupancy will look like for a future date.
