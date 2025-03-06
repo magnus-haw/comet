@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Room Transition Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Room Transition for {{ transition.child }}</h2>
+    <ul class="list-group mb-3">
+        <li class="list-group-item"><strong>Current Room:</strong> {{ transition.current_room.name }}</li>
+        <li class="list-group-item"><strong>New Room:</strong> {{ transition.new_room.name }}</li>
+        <li class="list-group-item"><strong>Start Date:</strong> {{ transition.start_date }}</li>
+        <li class="list-group-item"><strong>Teacher Assessment:</strong> {{ transition.teacher_assessment|default:"N/A" }}</li>
+        <li class="list-group-item"><strong>Parents Agree:</strong> {{ transition.parents_agree }}</li>
+        <li class="list-group-item"><strong>Email Sent:</strong> {{ transition.sent_transition_email }}</li>
+        <li class="list-group-item"><strong>Complete:</strong> {{ transition.complete }}</li>
+    </ul>
+
+    <div class="mb-3">
+        <form action="{% url 'send_transition_email' transition.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-info" {% if transition.sent_transition_email %}disabled{% endif %}>📧 Send Email</button>
+        </form>
+    </div>
+
+    <div class="mb-3">
+        <form action="{% url 'implement_transition' transition.id %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success" {% if transition.complete %}disabled{% endif %}>✔ Mark Complete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

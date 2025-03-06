@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Current Room Assignments{% endblock %}
+
+{% block content %}
+    <h2 class="text-center my-4">Current Room Assignments</h2>
+
+    <div class="row">
+        {% for entry in room_data %}
+        <div class="col-sm-12 mb-4">  <!-- Two-column layout -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ entry.room.name }} ({{ entry.room.min_age }} - {{ entry.room.max_age }} months)</h5>
+                    <h7>Open seats: {{ entry.room.open_seats }}</h7>
+                </div>
+                <div class="card-body">
+                    {% if entry.children %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Birth Date</th>
+                                    <th>Target Move Up Date</th>
+                                    <th>Transition status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for child in entry.children %}
+                                <tr class="{{ child.row_class }}">
+                                    <td><a href="{% url 'admin:accc_child_change' child.pk %}" class="btn btn-primary btn-sm">{{ child.first_name }} {{ child.last_name }}</a></td>
+                                    <td>{{ child.birth_date }}</td>
+                                    <td>{{ child.expected_move_up_date|default:"N/A" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            
+                                            {% if child.room_transitions.last and not child.room_transitions.last.complete %}
+                                                <!-- Edit Transition Button -->
+                                                
+                                                <a href="{% url 'edit_transition' child.room_transitions.last.pk %}" class="btn btn-warning btn-sm mx-1">
+                                                    ✏ Edit
+                                                </a>
+                                                
+                                                
+                                                <!-- Delete Transition Button -->
+                                                <form action="{% url 'delete_transition' child.room_transitions.last.pk %}" method="post" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger btn-sm mx-1" onclick="return confirm('Are you sure you want to delete this transition?');">
+                                                        🗑 Delete
+                                                    </button>
+                                                </form>
+
+                                                <span class="mx-1">{{ child.room_transitions.last.start_date }}</span>
+                                                {% if child.room_transitions.last.sent_transition_email %} 
+                                                    <i class="fas fa-envelope text-success ml-1"></i>
+                                                {%else%}
+                                                    <i class="fas fa-envelope text-secondary ml-1"></i> 
+                                                {%endif%}
+                                                {% if child.room_transitions.last.parents_agree %} 
+                                                    <i class="fas fa-handshake text-success ml-1"></i> 
+                                                {%else%}
+                                                <i class="fas fa-handshake text-secondary ml-1"></i> 
+                                                {% endif %}
+                                                {% if child.room_transitions.last.updated_procare %} 
+                                                    <i class="fas fa-check text-success ml-1"></i> 
+                                                {%else%}
+                                                    <i class="fas fa-check text-secondary ml-1"></i> 
+                                                {% endif %}
+                                                {% if child.room_transitions.last.updated_db %} 
+                                                    <i class="fas fa-database text-success ml-1"></i>
+                                                {%else%}
+                                                    <i class="fas fa-database text-secondary ml-1"></i> 
+                                                {% endif %}
+                                                {% if child.room_transitions.last.updated_tuition_rate %} 
+                                                    <i class="fas fa-dollar-sign text-success ml-1"></i>
+                                                {%else%}
+                                                    <i class="fas fa-dollar-sign text-secondary ml-1"></i> 
+                                                {% endif %}
+                                                {% if child.room_transitions.last.is_complete %}
+                                                    <!-- Delete Transition Button -->
+                                                    <form action="{% url 'implement_transition' child.room_transitions.last.pk %}" method="post" style="display:inline;">
+                                                        {% csrf_token %}
+                                                        <button type="submit" class="btn btn-success btn-sm ml-1" onclick="return confirm('Are you sure you want to complete this transition?');">
+                                                            <i class="fas fa-check text-primary ml-1"></i> Mark complete
+                                                        </button>
+                                                    </form>
+                                                {%endif%}
+
+                                            {% else %}
+                                            <!-- Add Transition Button -->
+                                            <a href="{% url 'add_transition_for_child' child.pk %}" class="btn btn-success btn-sm">
+                                                ➕ Add
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    
+                                    <td>{{ child.notes|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No children currently enrolled in this room.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

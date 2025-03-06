@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Projected Room Assignments for {{ target_date|date:"F Y" }}</h2>
+
+{% for room_name, data in future_rooms.items %}
+    <h3>{{ data.room.name }} ({{ data.room.min_age }} - {{ data.room.max_age }} months)</h3>
+    <ul>
+        {% for child in data.children %}
+            {% if child in moved_children %}
+                <li style="color: green; font-weight: bold;">
+                    {{ child.first_name }} {{ child.last_name }} (Moved Up)
+                </li>
+            {% else %}
+                <li>
+                    {{ child.first_name }} {{ child.last_name }} (Age: {{ child.birth_date|date:"Y-m-d" }})
+                </li>
+            {% endif %}
+        {% empty %}
+            <p>No children currently enrolled.</p>
+        {% endfor %}
+    </ul>
+{% endfor %}
+{% endblock %}
