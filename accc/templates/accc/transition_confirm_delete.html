@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="my-4">Confirm Delete</h2>
+    <p>Are you sure you want to delete the transition for <strong>{{ transition.child }}</strong> from <strong>{{ transition.current_room }}</strong> to <strong>{{ transition.new_room }}</strong>?</p>
+    
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">🗑 Confirm Delete</button>
+        <a href="{% url 'transition_detail' transition.pk %}" class="btn btn-secondary">Cancel</a>
+    </form>
+</div>
+{% endblock %}
