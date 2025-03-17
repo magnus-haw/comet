@@ -7,6 +7,10 @@ urlpatterns = [
 ]
 
 urlpatterns += [
+    path('enrollment/', views.enrollment, name='enrollment'),
+]
+
+urlpatterns += [
     path('transitions/add/', views.add_transition, name='add_transition'),
     path('transitions/add/<int:child_pk>/', views.add_transition, name='add_transition_for_child'),
     path('transitions/edit/<int:trans_pk>/', views.add_transition, name='edit_transition'),

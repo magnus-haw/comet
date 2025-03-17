@@ -8,8 +8,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
-from .models import RoomTransition, Room, Child
-from .forms import RoomTransitionForm
+from .models import RoomTransition, Room, Child, Department
+from .forms import RoomTransitionForm, WithdrawalForm
 
 @login_required
 def current_rooms_view(request):
@@ -50,8 +50,52 @@ def current_rooms_view(request):
             child.row_class = row_class
 
         room_data.append({"room": room, "children": children})
+    departments = Department.objects.all()
+    return render(request, "accc/current_rooms.html", {"room_data": room_data, "now":now().date(), "departments":departments,})
 
-    return render(request, "accc/current_rooms.html", {"room_data": room_data, "now":now().date()})
+def enrollment(request):
+    departments = Department.objects.all()
+    rooms = Room.objects.all()
+    return render(request, "accc/enrollment.html", {"departments":departments, "rooms":rooms,})
+
+
+# 1. Add a Room Transition
+def add_withdrawal(request, w_pk=None, child_pk=None):
+    """Handles adding withdrawals, editing existing ones, and pre-filling forms for specific children."""
+    
+    if w_pk:
+        # Editing an existing withdrawal
+        transition = get_object_or_404(RoomTransition, pk=w_pk)
+        form = RoomTransitionForm(request.POST or None, instance=transition)
+        action = "Edit withdrawal"
+    else:
+        # Adding a new withdrawal or pre-filling for a specific child
+        withdrawal = None
+        initial_data = {}
+
+        if child_pk:
+            # Pre-fill child and current room if child_pk is provided
+            child = get_object_or_404(Child, pk=child_pk)
+            initial_data = {
+                'child': child,
+                'current_room': child.room
+            }
+
+        form = WithdrawalForm(request.POST or None, initial=initial_data)
+        action = "Add withdrawal"
+
+    if request.method == 'POST':
+        if form.is_valid():
+            transition = form.save()
+            if w_pk:
+                messages.success(request, f"withdrawal for {transition.child} updated successfully!")
+            else:
+                messages.success(request, f"withdrawal for {transition.child} added successfully!")
+            return redirect('current-rooms')
+
+    return render(request, 'accc/add_withdrawal.html', {'form': form, 'action': action})
+
+
 
 # 1. Add a Room Transition
 @login_required

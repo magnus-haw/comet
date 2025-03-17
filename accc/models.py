@@ -14,6 +14,11 @@ HOUSEHOLD_TYPES = [
         ("M", "Military"),
     ]
 
+DIRECTOR_EMAIL = "director@ameschildcare.org"
+AST_DIRECTOR_EMAIL = "assistant_director@ameschildcare.org"
+RECEPTIONIST_EMAIL = "receptionist@ameschildcare.org"
+FRONT_OFFICE_EMAILS = [DIRECTOR_EMAIL, AST_DIRECTOR_EMAIL, RECEPTIONIST_EMAIL]
+
 class HouseholdManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -54,6 +59,47 @@ class VolunteerHours(models.Model):
     def __str__(self):
         return f"{self.household} {self.date}: {self.value}"
 
+class DepartmentManager(models.Manager):
+    def get_by_natural_key(self, name):
+        return self.get(name=name)
+    
+class Department(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(null=True, blank=True)
+    min_age = models.PositiveIntegerField(help_text="Minimum age in months",null=True, blank=True)
+    max_age = models.PositiveIntegerField(help_text="Maximum age in months",null=True, blank=True)
+    
+    objects = DepartmentManager()
+
+    def __str__(self):
+        return self.name
+
+    def natural_key(self):
+        return (self.name,)
+    
+    class Meta:
+        ordering = ["min_age"]
+
+    @property
+    def children(self):
+        return Child.objects.filter(room__department = self)
+    
+    @property
+    def enrollmentpercent(self):
+        return self.children.count()/self.capacity
+
+    @property
+    def openseats(self):
+        return self.capacity - self.children.count()
+
+    @property
+    def capacity(self):
+        capacity = 0.
+        for room in self.rooms.all():
+            capacity += room.capacity
+        return capacity
+
+
 class RoomManager(models.Manager):
     def get_by_natural_key(self, name):
         return self.get(name=name)
@@ -78,33 +124,30 @@ class Room(models.Model):
         blank=True,
         help_text="Categorization based on age range"
     )
+    department = models.ForeignKey('Department', on_delete= models.SET_NULL, null=True, related_name='rooms')
     objects = RoomManager()  # Use custom manager
 
     def natural_key(self):
         return (self.name,)
 
-    def save(self, *args, **kwargs):
-        """Auto-assign room category based on age range"""
-        if self.min_age < 12:
-            self.category = "infant"
-        elif self.min_age < 18:
-            self.category = "young_toddler"
-        elif self.min_age < 30:
-            self.category = "toddler"
-        elif self.min_age < 42:
-            self.category = "transitional_preschool"
-        elif self.min_age < 48:
-            self.category = "early_preschool"
-        else:
-            self.category = "preschool"
+    @property
+    def enrollmentpercent(self):
+        return self.children.count()/self.capacity
 
-        super().save(*args, **kwargs)
+    @property
+    def openseats(self):
+        return self.capacity-self.children.count()
+    
+    @property
+    def department_percentage(self):
+        return self.department.enrollmentpercent
 
     class Meta:
         ordering = ["min_age"]
 
     def __str__(self):
         return f"{self.name} - {dict(self.ROOM_CATEGORIES).get(self.category, 'Unknown')}"
+
 
 class ChildManager(models.Manager):
     def get_by_natural_key(self, first_name, last_name, birth_date):
@@ -117,9 +160,11 @@ class Child(models.Model):
     household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="children")
     security_deposit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     accc_enroll_date = models.DateField(blank=True, null=True)
+    accc_leave_date = models.DateField(blank=True, null=True)
     expected_move_up_date = models.DateField(blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
     room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True, related_name="children")
+    enrolled = models.BooleanField(default= False)
 
     objects = ChildManager()  # Use custom manager
 
@@ -258,21 +303,17 @@ class NewEnrollment(models.Model):
 class Withdrawals(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="withdrawals")
     accepted = models.BooleanField(default=False)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="room_withdrawals")
+    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="withdrawals")
     teacher_assessment = models.TextField(null=True, blank=True)
-    start_date = models.DateField()
-    sent_welcome_email = models.BooleanField(default=False)
+    date = models.DateField()
+    sent_email = models.BooleanField(default=False)
     parents_agree = models.BooleanField(default=False)
-    add_to_procare = models.BooleanField(default=False)
-    add_to_db = models.BooleanField(default=False)
-    security_deposit = models.BooleanField(default=False)
-    child_files = models.BooleanField(default=False)
-    parentemail1 = models.EmailField(null=True, blank=True)
-    parentemail2 = models.EmailField(null=True, blank=True)
+    updated_procare = models.BooleanField(default=False)
+    updated_db = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.child} - {self.room} ({self.start_date})"
+        return f"{self.child} - {self.room} ({self.date})"
 
     class Meta:
         unique_together = ('child','room',)

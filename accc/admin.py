@@ -105,7 +105,7 @@ class NewEnrollmentAdmin(admin.ModelAdmin):
 
 @admin.register(Withdrawals)
 class WithdrawalsAdmin(admin.ModelAdmin):
-    list_display = ("child", "room", "start_date", "accepted", "send_exit_email_button", "process_withdrawal_button")
+    list_display = ("child", "room", "date", "accepted", "send_exit_email_button", "process_withdrawal_button")
     list_filter = ("accepted", "room")
     search_fields = ("child__first_name", "child__last_name", "room__name")
 
