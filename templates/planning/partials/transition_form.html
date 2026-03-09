@@ -1,0 +1,103 @@
+{% if plan %}
+<form
+hx-post="{% url 'update-moveup' plan.id %}"
+hx-target="#room-card-{{ plan.current_room.id }}"
+hx-swap="outerHTML"
+hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('modal')).hide()"
+>
+{% else %}
+<form
+hx-post="{% url 'create-moveup' %}"
+hx-target="#room-card-{{ current_room.id }}"
+hx-swap="outerHTML"
+hx-on::after-request="bootstrap.Modal.getInstance(document.getElementById('modal')).hide()"
+>
+{% endif %}
+
+{% csrf_token %}
+
+{% if not plan %}
+<input type="hidden" name="child_id" value="{{ child.id }}">
+<input type="hidden" name="room_id" value="{{ current_room.id }}">
+{% endif %}
+
+<div class="mb-3">
+<label class="form-label">Child</label>
+<input class="form-control" value="{% if plan %}{{ plan.child }}{% else %}{{ child }}{% endif %}" disabled>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Current Room</label>
+<input class="form-control" value="{% if plan %}{{ plan.current_room.name }}{% else %}{{ current_room.name }}{% endif %}" disabled>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Destination</label>
+
+<select name="target_room" class="form-select" required>
+
+<optgroup label="Move to Room">
+{% for r in rooms %}
+<option
+value="{{ r.id }}"
+{% if plan and plan.target_room and r.id == plan.target_room.id %}selected{% endif %}
+>
+{{ r.name }} ({{ r.min_age_months }}–{{ r.max_age_months }} mo)
+</option>
+{% endfor %}
+</optgroup>
+
+<optgroup label="Exit Center">
+
+{% if allow_graduation %}
+<option
+value="graduation"
+{% if plan and plan.exit_type == "graduation" %}selected{% endif %}
+>
+Graduate from center
+</option>
+{% endif %}
+
+<option
+value="withdrawal"
+{% if plan and plan.exit_type == "withdrawal" %}selected{% endif %}
+>
+Withdraw from center
+</option>
+
+</optgroup>
+
+</select>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Planned Date</label>
+
+<input
+type="date"
+name="planned_date"
+class="form-control"
+value="{% if plan %}{{ plan.planned_date|date:'Y-m-d' }}{% else %}{{ today|date:'Y-m-d' }}{% endif %}"
+required
+>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Teacher Notes</label>
+
+<textarea
+name="teacher_notes"
+class="form-control"
+rows="3"
+>{% if plan %}{{ plan.teacher_notes }}{% endif %}</textarea>
+</div>
+
+<button class="btn btn-primary">
+{% if plan %}
+Update Plan
+{% else %}
+Create Plan
+{% endif %}
+</button>
+
+</form>

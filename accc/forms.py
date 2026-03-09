@@ -12,9 +12,9 @@ class RoomTransitionForm(forms.ModelForm):
 class WithdrawalForm(forms.ModelForm):
     class Meta:
         model = Withdrawals
-        fields = ['child', 'accepted', 'room', 'teacher_assessment', 'date', 
-                  'sent_email', 'parents_agree', 'updated_procare', 'updated_db', 
-                  'complete']
+        fields = ['child', 'sent_withdrawal_email', 'teacher_assessment', 'date', 
+                  'parents_agree', 'removed_from_procare', 'removed_from_google','refund_security_deposit',
+                  'removed_child_files',]
 
 
 

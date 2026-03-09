@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Planning Dashboard
+{% endblock %}
+
+{% block content %}
+  <h1 class="mb-4">Room Planning Dashboard</h1>
+
+  <!-- Room Jump Navigation -->
+
+  <div class="sticky-top bg-white border-bottom mb-4 py-2" style="z-index:1020">
+    <div class="container-fluid">
+      <div class="d-flex flex-wrap gap-2 justify-content-center">
+        {% for data in room_data %}
+          <a class="btn btn-outline-primary btn-sm" href="#room-card-{{ data.room.id }}">{{ data.room.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% for data in room_data %}
+    {% include 'planning/partials/room_card.html' with data=data %}
+  {% endfor %}
+
+  <!-- Modal for HTMX forms -->
+
+  <div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Move-Up Plan</h5>
+          <button class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div id="modal-body"></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

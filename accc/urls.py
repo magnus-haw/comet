@@ -11,6 +11,15 @@ urlpatterns += [
 ]
 
 urlpatterns += [
+    path('withdrawals/add/', views.add_withdrawal, name='add_withdrawal'),
+    path('withdrawals/add/<int:child_pk>/', views.add_withdrawal, name='add_withdrawal_for_child'),
+    path('withdrawals/edit/<int:w_pk>/', views.add_withdrawal, name='edit_withdrawal'),
+    path('withdrawals/delete/<int:w_pk>/', views.delete_withdrawal, name='delete_withdrawal'),
+    path('withdrawals/<int:w_pk>/send-email/', views.send_withdrawal_email, name='send_withdrawal_email'),
+    path('withdrawals/<int:w_pk>/implement/', views.implement_withdrawal, name='implement_withdrawal'),
+]
+
+urlpatterns += [
     path('transitions/add/', views.add_transition, name='add_transition'),
     path('transitions/add/<int:child_pk>/', views.add_transition, name='add_transition_for_child'),
     path('transitions/edit/<int:trans_pk>/', views.add_transition, name='edit_transition'),

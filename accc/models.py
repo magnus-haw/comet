@@ -257,6 +257,9 @@ class RoomTransition(models.Model):
             self.sent_transition_email = True
             self.save()
 
+    def send_completion_email(self):
+        pass
+
 
 class NewEnrollment(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="enrollments")
@@ -302,41 +305,51 @@ class NewEnrollment(models.Model):
 
 class Withdrawals(models.Model):
     child = models.ForeignKey(Child, on_delete=models.CASCADE, related_name="withdrawals")
-    accepted = models.BooleanField(default=False)
-    room = models.ForeignKey(Room, on_delete=models.CASCADE, related_name="withdrawals")
     teacher_assessment = models.TextField(null=True, blank=True)
     date = models.DateField()
-    sent_email = models.BooleanField(default=False)
+    sent_withdrawal_email = models.BooleanField(default=False)
     parents_agree = models.BooleanField(default=False)
-    updated_procare = models.BooleanField(default=False)
-    updated_db = models.BooleanField(default=False)
+    removed_from_procare = models.BooleanField(default=False)
+    removed_from_google = models.BooleanField(default=False)
+    refund_security_deposit = models.BooleanField(default=False)
+    removed_child_files = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.child} - {self.room} ({self.date})"
+        return f"{self.child} - {self.child.room} ({self.date})"
 
     class Meta:
-        unique_together = ('child','room',)
         verbose_name_plural = "Withdrawals"
 
-    def is_fully_processed(self):
+    def is_complete(self):
         """Checks if all required steps for withdrawal are completed."""
-        return all([self.accepted, self.remove_from_procare, self.remove_from_db, self.refund_security_deposit, self.remove_child_files])
+        return all([self.sent_withdrawal_email, self.parents_agree, self.removed_from_procare, self.removed_from_google, self.refund_security_deposit, self.removed_child_files])
 
-    def send_exit_email(self):
+    def mark_complete(self):
+        """Marks the transition process as complete if all conditions are met."""
+        if self.is_complete:
+            self.complete = True
+            self.child.accc_leave_date = self.date
+            self.child.enrolled= False
+            self.child.room = None
+            self.child.save()
+            self.save()
+
+    def send_withdrawal_email(self):
         """Sends an exit confirmation email to the parents."""
-        if not self.sent_exit_email:
+        if not self.sent_withdrawal_email:
             subject = f"Withdrawal Confirmation for {self.child.first_name} {self.child.last_name}"
             message = (
                 f"Dear Parents,\n\n"
                 f"We confirm that {self.child.first_name} will be withdrawn from {self.room.name} "
-                f"effective {self.start_date}.\n\n"
+                f"effective {self.date}.\n\n"
                 f"If you have any questions, please contact us.\n\nBest,\nSchool Administration"
             )
             recipients = [email for email in [self.parentemail1, self.parentemail2] if email]
             if recipients:
                 send_mail(subject, message, 'admin@school.com', recipients)
-                self.sent_exit_email = True
+                self.sent_withdrawal_email = True
+                self.child.accc_leave_date = self.date
                 self.save()
 
 

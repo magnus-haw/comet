@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .models import RoomTransition, Room, Child, Department
-from .forms import RoomTransitionForm, WithdrawalForm
+from .forms import RoomTransitionForm, WithdrawalForm, Withdrawals
 
 @login_required
 def current_rooms_view(request):
@@ -59,14 +59,14 @@ def enrollment(request):
     return render(request, "accc/enrollment.html", {"departments":departments, "rooms":rooms,})
 
 
-# 1. Add a Room Transition
+# 1. Add/edit a Withdrawal
 def add_withdrawal(request, w_pk=None, child_pk=None):
     """Handles adding withdrawals, editing existing ones, and pre-filling forms for specific children."""
     
     if w_pk:
         # Editing an existing withdrawal
-        transition = get_object_or_404(RoomTransition, pk=w_pk)
-        form = RoomTransitionForm(request.POST or None, instance=transition)
+        withdrawal = get_object_or_404(Withdrawals, pk=w_pk)
+        form = WithdrawalForm(request.POST or None, instance=withdrawal)
         action = "Edit withdrawal"
     else:
         # Adding a new withdrawal or pre-filling for a specific child
@@ -86,18 +86,57 @@ def add_withdrawal(request, w_pk=None, child_pk=None):
 
     if request.method == 'POST':
         if form.is_valid():
-            transition = form.save()
+            withdrawal = form.save()
             if w_pk:
-                messages.success(request, f"withdrawal for {transition.child} updated successfully!")
+                messages.success(request, f"withdrawal for {withdrawal.child} updated successfully!")
             else:
-                messages.success(request, f"withdrawal for {transition.child} added successfully!")
+                messages.success(request, f"withdrawal for {withdrawal.child} added successfully!")
             return redirect('current-rooms')
 
-    return render(request, 'accc/add_withdrawal.html', {'form': form, 'action': action})
+    return render(request, 'accc/add_transition.html', {'form': form, 'action': action})
+
+# 2. Send Transition Email
+@require_POST
+@login_required
+def send_withdrawal_email(request, w_pk):
+    """Sends a transition email to parents if not already sent."""
+    withdrawal = get_object_or_404(Withdrawals, id=w_pk)
+    if not withdrawal.sent_withdrawal_email:
+        withdrawal.send_withdrawal_email()
+        messages.success(request, f"Withdrawal email sent to parents of {withdrawal.child}!")
+    else:
+        messages.warning(request, f"Email already sent for {withdrawal.child}.")
+    return redirect('', w_pk=withdrawal.pk)
+
+@login_required
+def delete_withdrawal(request, w_pk):
+    """Deletes a withdrawal object if POST request is confirmed."""
+    withdrawal = get_object_or_404(Withdrawals, pk=w_pk)
+    
+    if request.method == 'POST':
+        withdrawal.delete()
+        messages.success(request, f"withdrawal for {withdrawal.child} has been deleted successfully!")
+        return redirect('current-rooms')  # Redirect to a list view or homepage
+    
+    return render(request, 'accc/withdrawal_confirm_delete.html', {'withdrawal': withdrawal})
+
+# 3. Implement Withdrawal
+@require_POST
+@login_required
+def implement_withdrawal(request, w_pk):
+    """Marks a withdrawal as complete if all conditions are met."""
+    withdrawal = get_object_or_404(RoomTransition, pk=w_pk)
+    withdrawal.mark_complete()
+    if withdrawal.complete:
+        messages.success(request, f"withdrawal for {withdrawal.child} marked as complete.")
+    else:
+        messages.warning(request, f"Cannot mark withdrawal complete for {withdrawal.child}. Check requirements.")
+    return redirect('current-rooms')
+
+# 4. Transition Detail View (to show details and 
 
 
-
-# 1. Add a Room Transition
+# 1. Add/edit a Room Transition
 @login_required
 def add_transition(request, trans_pk=None, child_pk=None):
     """Handles adding new room transitions, editing existing ones, and pre-filling forms for specific children."""
@@ -158,7 +197,6 @@ def delete_transition(request, trans_pk):
         return redirect('current-rooms')  # Redirect to a list view or homepage
     
     return render(request, 'accc/transition_confirm_delete.html', {'transition': transition})
-
 
 # 3. Implement Transition
 @require_POST
