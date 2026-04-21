@@ -65,6 +65,8 @@ db.sqlite3
 db.sqlite3-journal
 _db.sqlite3
 staticfiles/
+static/
+*.sqlite3
 
 # Flask stuff:
 instance/
