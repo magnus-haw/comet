@@ -38,7 +38,6 @@ class Placement(models.Model):
     def is_current(self):
         return self.end_date is None
 
-
 class MoveUpPlan(models.Model):
     """
     Planning record for potential classroom transitions.
@@ -187,7 +186,6 @@ class AdmissionPlan(models.Model):
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
-
 
 
 

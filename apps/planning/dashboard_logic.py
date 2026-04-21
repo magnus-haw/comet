@@ -25,7 +25,7 @@ def build_dashboard_data(room_ids=None):
         .filter(
             room_id__in=room_ids,
             end_date__isnull=True
-        )
+        ).order_by("child__birth_date")
     )
 
     placements_by_room = {}

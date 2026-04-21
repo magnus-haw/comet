@@ -15,6 +15,7 @@ class PlacementAdmin(admin.ModelAdmin):
 
     list_filter = (
         "room",
+        "end_date",
     )
 
     search_fields = (
