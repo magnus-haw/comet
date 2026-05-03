@@ -10,7 +10,7 @@ from apps.people.models import Child
 from apps.classrooms.models import Room
 
 from .models import Placement, MoveUpPlan
-from .dashboard_logic import build_dashboard_data
+from .dashboard_logic import build_dashboard_data, build_global_stats
 
 
 # -------------------------------------------------------
@@ -27,9 +27,6 @@ def _parse_transition(target_value):
     Determines transition type from form value.
     """
 
-    if target_value == "graduation":
-        return None, "graduation"
-
     if target_value == "withdrawal":
         return None, "withdrawal"
 
@@ -43,13 +40,10 @@ def _parse_transition(target_value):
 def _transition_message(request, child, exit_type, target_room=None):
 
     if exit_type == "moveup":
-        messages.success(request, f"{child} moved to {target_room.name}")
-
-    elif exit_type == "graduation":
-        messages.success(request, f"{child} graduated.")
+        messages.success(request, f"{child} planned move to {target_room.name}")
 
     elif exit_type == "withdrawal":
-        messages.success(request, f"{child} withdrawn from center.")
+        messages.success(request, f"{child} planned withdraw from center.")
 
 
 # -------------------------------------------------------
@@ -59,9 +53,11 @@ def _transition_message(request, child, exit_type, target_room=None):
 def dashboard(request):
 
     room_data = build_dashboard_data()
+    stats = build_global_stats()
 
     context = {
         "room_data": room_data,
+        "global_stats": stats,
         "today": now().date(),
     }
 
@@ -103,7 +99,6 @@ def moveup_form(request, child_id):
             "child": child,
             "rooms": rooms,
             "current_room": current_room,
-            "allow_graduation": current_room.id == max_room.id,
             "today": today,
         },
     )
@@ -200,7 +195,6 @@ def edit_moveup_form(request, plan_id):
             "plan": plan,
             "rooms": rooms,
             "current_room": current_room,
-            "allow_graduation": current_room.id == max_room.id,
             "today": date.today(),
         },
     )
@@ -372,3 +366,19 @@ def _refresh_two_room_cards(request, room_a, room_b):
         </div>
         """
     )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

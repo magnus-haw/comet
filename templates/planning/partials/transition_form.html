@@ -48,16 +48,6 @@ value="{{ r.id }}"
 </optgroup>
 
 <optgroup label="Exit Center">
-
-{% if allow_graduation %}
-<option
-value="graduation"
-{% if plan and plan.exit_type == "graduation" %}selected{% endif %}
->
-Graduate from center
-</option>
-{% endif %}
-
 <option
 value="withdrawal"
 {% if plan and plan.exit_type == "withdrawal" %}selected{% endif %}

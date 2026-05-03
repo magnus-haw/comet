@@ -1,5 +1,5 @@
 from django.db import models
-
+from decimal import Decimal
 
 HOUSEHOLD_TYPES = [
     ("CV", "Civil Servant"),
@@ -8,6 +8,39 @@ HOUSEHOLD_TYPES = [
     ("M", "Military"),
 ]
 
+TUITION_RATES = {
+    # -----------------------
+    # Civil Servant (NASA)
+    # -----------------------
+    ("IN", "CV"): Decimal("1380.12"),
+    ("TL", "CV"): Decimal("1341.17"),
+    ("TR", "CV"): Decimal("1213.17"),
+    ("PS", "CV"): Decimal("978.33"),
+
+    # -----------------------
+    # Military (same as NASA)
+    # -----------------------
+    ("IN", "M"): Decimal("1380.12"),
+    ("TL", "M"): Decimal("1341.17"),
+    ("TR", "M"): Decimal("1213.17"),
+    ("PS", "M"): Decimal("978.33"),
+
+    # -----------------------
+    # Staff (10% discount vs NASA)
+    # -----------------------
+    ("IN", "S"): Decimal("1242.11"),  # 1380.12 * 0.9
+    ("TL", "S"): Decimal("1207.05"),  # 1341.17 * 0.9
+    ("TR", "S"): Decimal("1091.85"),  # 1213.17 * 0.9
+    ("PS", "S"): Decimal("880.50"),   # 978.33 * 0.9
+
+    # -----------------------
+    # Public
+    # -----------------------
+    ("IN", "P"): Decimal("1536.85"),
+    ("TL", "P"): Decimal("1493.74"),
+    ("TR", "P"): Decimal("1357.64"),
+    ("PS", "P"): Decimal("1100.17"),
+}
 
 class Household(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -56,6 +89,20 @@ class Child(models.Model):
     enrolled = models.BooleanField(default=True)
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Security deposit (stored, editable, defaulted)
+    security_deposit = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=Decimal("1380.12"),
+    )
+
+    # Tuition override (null = auto)
+    tuition_override = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        null=True,
+        blank=True,
+    )
 
     class Meta:
         unique_together = ("first_name", "last_name", "birth_date")
@@ -69,6 +116,29 @@ class Child(models.Model):
 
         today = date.today()
         return (today.year - self.birth_date.year) * 12 + (today.month - self.birth_date.month)
+    
+    @property
+    def tuition(self):
+        if self.tuition_override is not None:
+            return self.tuition_override
+
+        return self.calculate_tuition()
+    
+    def calculate_tuition(self):
+        placement = (
+            self.placements
+            .filter(end_date__isnull=True)
+            .select_related("room")
+            .first()
+        )
+
+        if not placement:
+            return None
+
+        household_type = self.household.household_type
+        room = placement.room
+        
+        return TUITION_RATES.get((room.department, household_type))
 
 class Staff(models.Model):
 

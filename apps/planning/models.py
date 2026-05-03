@@ -45,7 +45,6 @@ class MoveUpPlan(models.Model):
     """
     EXIT_CHOICES = [
         ("moveup", "Move Up"),
-        ("graduation", "Graduation"),
         ("withdrawal", "Withdrawal"),
     ]
     STATUS_CHOICES = [

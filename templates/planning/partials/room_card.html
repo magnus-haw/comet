@@ -1,6 +1,11 @@
 <div id="room-card-{{ data.room.id }}" class="card mb-4 shadow-sm">
   <div class="card-header bg-primary text-white d-flex justify-content-between">
-    <strong>{{ data.room.name }}</strong>
+    <strong>
+      {{ data.room.name }}
+      <small class="text-light">
+        ({{ data.room.min_age_months }}–{{ data.room.max_age_months }} mo)
+      </small>
+    </strong>
 
     <span>
       Capacity {{ data.room.capacity }}
@@ -18,6 +23,7 @@
           <th>Child</th>
           <th>Birthdate</th>
           <th>Age</th>
+          <th>Household</th>
           <th>Status</th>
           <th>Move-Up</th>
         </tr>
@@ -31,6 +37,8 @@
             <td>{{ item.child.birth_date }}</td>
 
             <td>{{ item.child.age_months }} mo</td>
+
+            <td>{{ item.child.household.get_household_type_display }}</td>
 
             <td>
               {% if item.status_code == 'overdue' %}
@@ -49,8 +57,6 @@
                 <div class="d-flex gap-2 align-items-center">
                   {% if item.moveup_plan.exit_type == 'withdrawal' %}
                     <span class="badge bg-secondary">Withdrawal ({{ item.moveup_plan.planned_date }})</span>
-                  {% elif item.moveup_plan.exit_type == 'graduation' %}
-                    <span class="badge bg-dark">Graduation ({{ item.moveup_plan.planned_date }})</span>
                   {% else %}
                     <span class="badge bg-info">
                       Planned → {{ item.moveup_plan.target_room.name }}
@@ -66,6 +72,11 @@
 
                   <button class="btn btn-sm btn-outline-danger" hx-post="/planning/cancel-moveup/{{ item.moveup_plan.id }}/" hx-target="#room-card-{{ data.room.id }}" hx-swap="outerHTML" hx-confirm="Cancel this move-up plan?">Cancel</button>
                 </div>
+                {% if item.moveup_plan.teacher_notes %}
+                  <div class="mt-1 text-muted small">
+                    📝 {{ item.moveup_plan.teacher_notes }}
+                  </div>
+                {% endif %}
               {% else %}
                 <button class="btn btn-sm btn-outline-primary" hx-get="/planning/moveup-form/{{ item.child.id }}/?room_id={{ data.room.id }}" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#modal">Plan Move-Up</button>
               {% endif %}
@@ -73,7 +84,7 @@
           </tr>
         {% empty %}
           <tr>
-            <td colspan="5" class="text-center text-muted">No children assigned</td>
+            <td colspan="6" class="text-center text-muted">No children assigned</td>
           </tr>
         {% endfor %}
       </tbody>
@@ -98,8 +109,6 @@
             <td>
               {% if move.exit_type == 'moveup' %}
                 {{ move.target_room.name }}
-              {% elif move.exit_type == 'graduation' %}
-                Graduation
               {% else %}
                 Withdrawal
               {% endif %}

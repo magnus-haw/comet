@@ -1,5 +1,14 @@
 from django.db import models
 from apps.people.models import Staff
+from decimal import Decimal
+
+DEPARTMENTS = [
+    ("IN", "Infant"),
+    ("TL", "Toddler"),
+    ("TR", "Preschool Transition"),
+    ("PS", "Preschool"),
+]
+
 
 
 class Room(models.Model):
@@ -14,6 +23,12 @@ class Room(models.Model):
     max_age_months = models.PositiveIntegerField(
         help_text="Maximum age in months"
     )
+    
+    department = models.CharField(
+        max_length=2,
+        choices=DEPARTMENTS,
+        default="PS",
+    )
 
     primary_teachers = models.ManyToManyField(
         Staff,
@@ -25,5 +40,7 @@ class Room(models.Model):
 
     def __str__(self):
         return self.name
+    
+    
 
     

@@ -24,7 +24,7 @@ urlpatterns = [
     path("classrooms/", include("apps.classrooms.urls")),  # Includes all ACCC app URLs
     # path("operations/", include("apps.operations.urls")),  # Includes all ACCC app URLs
     path("planning/", include("apps.planning.urls")),  # Includes all ACCC app URLs
-    # path('', RedirectView.as_view(url='/accc/rooms/current', permanent=True)),
+    path('', RedirectView.as_view(url='/planning', permanent=True)),
 ]
 urlpatterns += [
     path('accounts/', include('django.contrib.auth.urls')),

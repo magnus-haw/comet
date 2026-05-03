@@ -6,6 +6,46 @@
 
 {% block content %}
   <h1 class="mb-4">Room Planning Dashboard</h1>
+  
+  <!-- Global Stats -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-header bg-dark text-white">
+      <strong>Center Overview</strong>
+    </div>
+
+    <div class="card-body">
+      <div class="row">
+
+        <!-- Occupancy -->
+        <div class="col-md-4">
+          <h6>Center Occupancy</h6>
+          <div class="fs-4">
+            {{ global_stats.occupancy_pct }}%
+          </div>
+          <small class="text-muted">
+            {{ global_stats.total_children }} / {{ global_stats.total_capacity }}
+          </small>
+        </div>
+
+        <!-- Household Mix -->
+        <div class="col-md-8">
+          <h6>Household Mix</h6>
+
+          <ul class="list-unstyled mb-0">
+            {% for type, pct in global_stats.household_pct.items %}
+              <li>
+                <strong>{{ type }}</strong>:
+                {{ pct|floatformat:1 }}%
+              </li>
+            {% empty %}
+              <li class="text-muted">No data</li>
+            {% endfor %}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   <!-- Room Jump Navigation -->
 

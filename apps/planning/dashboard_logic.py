@@ -94,4 +94,42 @@ def build_dashboard_data(room_ids=None):
 
     return room_data
 
+def build_global_stats():
+    rooms = Room.objects.all()
+    
+    placements = (
+        Placement.objects
+        .select_related("child__household", "room")
+        .filter(end_date__isnull=True)
+    )
+
+    total_capacity = sum(r.capacity for r in rooms)
+    total_children = placements.count()
+
+    occupancy_pct = (
+        (total_children / total_capacity) * 100
+        if total_capacity else 0
+    )
+
+    from collections import Counter
+
+    counts = Counter(
+        p.child.household.household_type
+        for p in placements
+    )
+
+    total = sum(counts.values()) or 1
+
+    household_pct = {
+        k: (v / total) * 100
+        for k, v in counts.items()
+    }
+
+    return {
+        "occupancy_pct": round(occupancy_pct, 1),
+        "household_pct": household_pct,
+        "total_children": total_children,
+        "total_capacity": total_capacity,
+    }
+
 
