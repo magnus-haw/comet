@@ -6,7 +6,7 @@
 
 {% block content %}
   <h1 class="mb-4">Room Planning Dashboard</h1>
-  
+
   <!-- Global Stats -->
   <div class="card mb-4 shadow-sm">
     <div class="card-header bg-dark text-white">
@@ -15,16 +15,30 @@
 
     <div class="card-body">
       <div class="row">
-
         <!-- Occupancy -->
         <div class="col-md-4">
           <h6>Center Occupancy</h6>
-          <div class="fs-4">
-            {{ global_stats.occupancy_pct }}%
+
+          <!-- Today -->
+          <div class="mb-2">
+            <div class="fs-4">{{ global_stats.occupancy_pct|floatformat:1 }}%</div>
+            <small class="text-muted">Today • {{ global_stats.total_children }} / {{ global_stats.total_capacity }}</small>
           </div>
-          <small class="text-muted">
-            {{ global_stats.total_children }} / {{ global_stats.total_capacity }}
-          </small>
+
+          <!-- Projections -->
+          <div class="small">
+            <div>
+              +30 days:
+              <strong>{{ occupancy_projection.plus_30.percent|floatformat:1 }}%</strong>
+              <span class="text-muted">({{ occupancy_projection.plus_30.children }} / {{ occupancy_projection.plus_30.capacity }})</span>
+            </div>
+
+            <div>
+              +60 days:
+              <strong>{{ occupancy_projection.plus_60.percent|floatformat:1 }}%</strong>
+              <span class="text-muted">({{ occupancy_projection.plus_60.children }} / {{ occupancy_projection.plus_60.capacity }})</span>
+            </div>
+          </div>
         </div>
 
         <!-- Household Mix -->
@@ -42,7 +56,6 @@
             {% endfor %}
           </ul>
         </div>
-
       </div>
     </div>
   </div>

@@ -24,6 +24,9 @@
           <th>Birthdate</th>
           <th>Age</th>
           <th>Household</th>
+          
+          <th>Tuition</th>
+          <th>Security Dep.</th>
           <th>Status</th>
           <th>Move-Up</th>
         </tr>
@@ -32,14 +35,16 @@
       <tbody>
         {% for item in data.children %}
           <tr>
-            <td>{{ item.child }}</td>
+            <td><a href="{% url 'admin:people_child_change' item.child.id %}">
+                {{ item.child }}</a></td>
 
             <td>{{ item.child.birth_date }}</td>
 
             <td>{{ item.child.age_months }} mo</td>
 
             <td>{{ item.child.household.get_household_type_display }}</td>
-
+            <td>${{ item.child.tuition }}</td>
+            <td>${{ item.child.security_deposit }}</td>
             <td>
               {% if item.status_code == 'overdue' %}
                 <span class="badge bg-danger">Overdue</span>

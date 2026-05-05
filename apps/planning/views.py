@@ -11,6 +11,7 @@ from apps.classrooms.models import Room
 
 from .models import Placement, MoveUpPlan
 from .dashboard_logic import build_dashboard_data, build_global_stats
+from .dashboard_logic import get_center_occupancy_projections
 
 
 # -------------------------------------------------------
@@ -54,11 +55,13 @@ def dashboard(request):
 
     room_data = build_dashboard_data()
     stats = build_global_stats()
+    occupy = get_center_occupancy_projections()
 
     context = {
         "room_data": room_data,
         "global_stats": stats,
         "today": now().date(),
+        "occupancy_projection":occupy, 
     }
 
     return render(

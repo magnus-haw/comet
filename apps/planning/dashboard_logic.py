@@ -1,10 +1,9 @@
 from django.utils.timezone import now
+from datetime import timedelta
 
 from apps.classrooms.models import Room
 from .models import Placement, MoveUpPlan
 from .eligibility import child_moveup_status
-
-from datetime import timedelta
 
 def build_dashboard_data(room_ids=None):
 
@@ -131,5 +130,32 @@ def build_global_stats():
         "total_children": total_children,
         "total_capacity": total_capacity,
     }
+
+
+
+def get_center_occupancy_projections():
+    today = now().date()
+
+    rooms = list(Room.objects.all())
+
+    def compute(date):
+        total_children = sum(r.occupancy(date) for r in rooms)
+        total_capacity = sum(r.capacity for r in rooms)
+
+        return {
+            "date": date,
+            "children": total_children,
+            "capacity": total_capacity,
+            "percent": (total_children / total_capacity) * 100 if total_capacity else 0,
+        }
+
+    return {
+        "today": compute(today),
+        "plus_30": compute(today + timedelta(days=30)),
+        "plus_60": compute(today + timedelta(days=60)),
+    }
+
+
+
 
 

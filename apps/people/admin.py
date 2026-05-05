@@ -31,6 +31,11 @@ class ChildAdmin(admin.ModelAdmin):
     list_display = ("first_name", "last_name", "birth_date", "household", "enrolled")
     list_filter = ("enrolled",)
     search_fields = ("first_name", "last_name")
+    readonly_fields = ("tuition",)
+
+    def tuition(self, obj):
+        return obj.tuition
+    tuition.short_description = "Default tuition"
 
 
 class StaffAdmin(admin.ModelAdmin):
