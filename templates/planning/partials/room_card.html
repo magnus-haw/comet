@@ -36,7 +36,13 @@
         {% for item in data.children %}
           <tr>
             <td><a href="{% url 'admin:people_child_change' item.child.id %}">
-                {{ item.child }}</a></td>
+                {{ item.child }}</a> 
+                {% if item.child.notes %}
+                  <div class="mt-1 text-muted small">
+                    📝 {{ item.child.notes }}
+                  </div>
+                {% endif %}
+            </td>
 
             <td>{{ item.child.birth_date }}</td>
 

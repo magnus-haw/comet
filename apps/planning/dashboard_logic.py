@@ -131,8 +131,6 @@ def build_global_stats():
         "total_capacity": total_capacity,
     }
 
-
-
 def get_center_occupancy_projections():
     today = now().date()
 
