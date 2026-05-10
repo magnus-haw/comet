@@ -20,9 +20,10 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("accounts/", include("django.contrib.auth.urls")),
     path("people/", include("apps.people.urls")),  # Includes all ACCC app URLs
     path("classrooms/", include("apps.classrooms.urls")),  # Includes all ACCC app URLs
-    # path("operations/", include("apps.operations.urls")),  # Includes all ACCC app URLs
+    path("volunteers/", include("apps.volunteers.urls")),  # Includes all ACCC app URLs
     path("planning/", include("apps.planning.urls")),  # Includes all ACCC app URLs
     path('', RedirectView.as_view(url='/planning', permanent=True)),
 ]

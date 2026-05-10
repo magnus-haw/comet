@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="mb-1">{{ household.name }}</h1>
+
+        <div class="text-muted">
+          {% for child in household.children.all %}
+            {% if child.enrolled %}
+              {{ child.first_name }}{% if not forloop.last %}, {% endif %}
+            {% endif %}
+          {% endfor %}
+        </div>
+        <h6 class="text-muted">(June {{ ppp_year }}- May {{ ppp_year|add:1 }})</h6>
+      </div>
+
+      <a href="{% url 'volunteers:hours_submit' %}?household={{ household.id }}" class="btn btn-primary">Submit Hours</a>
+    </div>
+
+    <!-- Summary Cards -->
+
+    <div class="row mb-4">
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-muted">Required</h6>
+
+            <div class="fs-3">{{ required_hours }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-muted">Approved</h6>
+
+            <div class="fs-3 text-success">{{ approved_hours }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-muted">Pending</h6>
+
+            <div class="fs-3 text-warning">{{ pending_hours }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-muted">Remaining</h6>
+
+            <div class="fs-3 text-danger">{{ remaining_hours }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submission Table -->
+
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <strong>Volunteer Submissions</strong>
+      </div>
+
+      <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Date</th>
+              <th>Parent</th>
+              <th>Hours</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% for submission in submissions %}
+              <tr>
+                <td>{{ submission.description }}</td>
+
+                <td>{{ submission.service_date }}</td>
+
+                <td>{{ submission.parent }}</td>
+
+                <td>{{ submission.hours }}</td>
+
+                <td>
+                  {% if submission.status == 'approved' %}
+                    <span class="badge bg-success">Approved</span>
+                  {% elif submission.status == 'pending' %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% else %}
+                    <span class="badge bg-danger">Rejected</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if submission.status == 'pending' %}
+                    <a href="{% url 'volunteers:hours_delete' submission.pk %}" class="btn btn-sm btn-outline-danger">Delete</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">No volunteer submissions yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+{% endblock %}

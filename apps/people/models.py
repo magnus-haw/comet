@@ -1,5 +1,6 @@
 from django.db import models
 from decimal import Decimal
+import uuid
 
 HOUSEHOLD_TYPES = [
     ("CV", "Civil Servant"),
@@ -46,6 +47,7 @@ class Household(models.Model):
     name = models.CharField(max_length=255, unique=True)
     address = models.TextField(blank=True)
     phone_number = models.CharField(max_length=20, blank=True)
+    uuid = models.UUIDField(default=uuid.uuid4)
 
     household_type = models.CharField(
         max_length=2,
@@ -57,6 +59,14 @@ class Household(models.Model):
 
     def __str__(self):
         return self.name
+    
+    @property
+    def display_name(self):
+        children = ", ".join(
+            c.first_name for c in self.children.all()
+        )
+
+        return f"{self.name} ({children})"
 
 
 class Parent(models.Model):

@@ -1,0 +1,11 @@
+<option value="">
+  Select Parent
+</option>
+
+{% for parent in parents %}
+
+  <option value="{{ parent.id }}">
+    {{ parent.first_name }} {{ parent.last_name }}
+  </option>
+
+{% endfor %}

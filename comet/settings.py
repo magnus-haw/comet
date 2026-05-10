@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "apps.people",
     "apps.classrooms",
     "apps.planning",
+    "apps.volunteers",
     # "apps.operations",
 ]
 
@@ -128,3 +129,10 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+LOGIN_URL = "/accounts/login/"
+
+LOGIN_REDIRECT_URL = "/planning/"
+LOGOUT_REDIRECT_URL = "/"
+
+

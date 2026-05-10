@@ -1,0 +1,38 @@
+{% for household in households %}
+
+  <button
+    type="button"
+
+    class="list-group-item list-group-item-action"
+
+    hx-get="{% url 'volunteers:household_parents' household.id %}"
+
+    hx-target="#id_parent"
+
+    hx-swap="innerHTML"
+
+    hx-on:click="
+      document.getElementById('id_household').value='{{ household.id }}';
+      document.getElementById('household-search-input').value='{{ household.name }}';
+      document.getElementById('household-results').innerHTML='';
+    ">
+
+    {{ household.name }}
+
+    (
+    {% for child in household.children.all %}
+      {% if child.enrolled %}
+        {{ child.first_name }}{% if not forloop.last %}, {% endif %}
+      {% endif %}
+    {% endfor %}
+    )
+
+  </button>
+
+{% empty %}
+
+  <div class="list-group-item text-muted">
+    No matching households
+  </div>
+
+{% endfor %}

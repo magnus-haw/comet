@@ -4,6 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 
 from apps.people.models import Child
@@ -51,6 +52,7 @@ def _transition_message(request, child, exit_type, target_room=None):
 # Dashboard
 # -------------------------------------------------------
 
+@login_required
 def dashboard(request):
 
     room_data = build_dashboard_data()
@@ -73,7 +75,7 @@ def dashboard(request):
 # -------------------------------------------------------
 # Transition form (create)
 # -------------------------------------------------------
-
+@login_required
 def moveup_form(request, child_id):
 
     child = get_object_or_404(Child, id=child_id)
@@ -110,7 +112,7 @@ def moveup_form(request, child_id):
 # -------------------------------------------------------
 # Create transition
 # -------------------------------------------------------
-
+@login_required
 def create_moveup(request):
 
     resp = _require_post(request)
@@ -170,7 +172,7 @@ def create_moveup(request):
 # -------------------------------------------------------
 # Edit form
 # -------------------------------------------------------
-
+@login_required
 def edit_moveup_form(request, plan_id):
 
     plan = get_object_or_404(MoveUpPlan, id=plan_id)
@@ -206,7 +208,7 @@ def edit_moveup_form(request, plan_id):
 # -------------------------------------------------------
 # Update transition
 # -------------------------------------------------------
-
+@login_required
 def update_moveup(request, plan_id):
 
     resp = _require_post(request)
@@ -238,7 +240,7 @@ def update_moveup(request, plan_id):
 # -------------------------------------------------------
 # Cancel transition
 # -------------------------------------------------------
-
+@login_required
 def cancel_moveup(request, plan_id):
 
     resp = _require_post(request)
@@ -258,7 +260,7 @@ def cancel_moveup(request, plan_id):
 # -------------------------------------------------------
 # Implement transition
 # -------------------------------------------------------
-
+@login_required
 def implement_moveup(request, plan_id):
 
     resp = _require_post(request)
