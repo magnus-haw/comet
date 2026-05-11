@@ -44,7 +44,17 @@ CSRF_TRUSTED_ORIGINS = config(
     default="",
     cast=Csv(),
 )
+CSRF_TRUSTED_ORIGINS = ["http://comet.ameschildcare.org"]
 
+SECURE_PROXY_SSL_HEADER = (
+    ("HTTP_X_FORWARDED_PROTO", "https")
+)
+
+COOKIE_SECURE = config(
+    "COOKIE_SECURE",
+    default=False,
+    cast=bool,
+)
 
 #
 # Applications
@@ -233,14 +243,12 @@ if not DEBUG:
 
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
-    SESSION_COOKIE_SECURE = True
-
-    CSRF_COOKIE_SECURE = True
-
-    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = COOKIE_SECURE
+    CSRF_COOKIE_SECURE = COOKIE_SECURE
+    SECURE_SSL_REDIRECT = COOKIE_SECURE
 
     X_FRAME_OPTIONS = "DENY"
-
+    USE_X_FORWARDED_HOST = True
 
 #
 # Email
