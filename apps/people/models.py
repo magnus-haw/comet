@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from decimal import Decimal
 import uuid
 
@@ -135,10 +136,14 @@ class Child(models.Model):
         return self.calculate_tuition()
     
     def calculate_tuition(self):
+        from django.utils.timezone import now
+        today = now().date()
         placement = (
             self.placements
-            .filter(end_date__isnull=True)
+            .filter(start_date__lte=today)
+            .filter(Q(end_date__isnull=True) | Q(end_date__gt=today))
             .select_related("room")
+            .order_by("-start_date")
             .first()
         )
 

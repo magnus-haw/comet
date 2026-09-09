@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Center Planning{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <h1 class="mb-1">Center Planning</h1>
+    <p class="text-muted mb-0">Cross-room capacity and kindergarten cohorts. Planned moves affect future dates; age milestones do not move children automatically.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="{% url 'planning-dashboard' %}">Room view</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-dark text-white"><strong>Capacity outlook</strong></div>
+  <div class="table-responsive">
+    <table class="table table-sm align-middle mb-0">
+      <thead>
+        <tr><th>Room</th><th>Today</th><th>+30 days</th><th>+60 days</th><th>Planned incoming</th><th>Planned leaving</th></tr>
+      </thead>
+      <tbody>
+      {% for row in room_rows %}
+        <tr>
+          <td><a href="{% url 'planning-dashboard' %}#room-card-{{ row.room.id }}"><strong>{{ row.room.name }}</strong></a></td>
+          {% for point in row.points %}
+            <td>
+              <strong>{{ point.occupancy }}/{{ point.capacity }}</strong>
+              <div class="small {% if point.open_seats < 0 %}text-danger{% else %}text-muted{% endif %}">
+                {% if point.open_seats >= 0 %}{{ point.open_seats }} open{% else %}{{ point.open_seats|stringformat:"+d" }} over capacity{% endif %}
+              </div>
+            </td>
+          {% endfor %}
+          <td>
+            {% for plan in row.incoming %}
+              <div class="small"><a href="{% url 'child-planning' plan.child.id %}">{{ plan.child }}</a> · {{ plan.planned_date|date:"M j" }}</div>
+            {% empty %}<span class="text-muted">—</span>{% endfor %}
+          </td>
+          <td>
+            {% for plan in row.outgoing %}
+              <div class="small"><a href="{% url 'child-planning' plan.child.id %}">{{ plan.child }}</a> · {{ plan.planned_date|date:"M j" }}</div>
+            {% empty %}<span class="text-muted">—</span>{% endfor %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header bg-dark text-white"><strong>Kindergarten / Vanguard cohorts</strong></div>
+  <div class="card-body">
+    <p class="small text-muted">A child must already be five before September 1. September 1 birthdays roll to the following kindergarten year. Vanguard planning limit: 20 children per cohort.</p>
+    <div class="row g-3">
+      {% for cohort in cohorts %}
+        <div class="col-md-6 col-xl-4">
+          <div class="border rounded p-3 h-100 {% if cohort.over_capacity %}border-danger{% endif %}">
+            <div class="d-flex justify-content-between">
+              <strong>Class of {{ cohort.year }}</strong>
+              <span class="badge {% if cohort.over_capacity %}bg-danger{% elif cohort.open_spots == 0 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ cohort.count }}/{{ cohort.capacity }}</span>
+            </div>
+            <div class="small text-muted mb-2">
+              {% if cohort.open_spots > 0 %}{{ cohort.open_spots }} cohort spots remaining{% elif cohort.open_spots == 0 %}At cohort limit{% else %}{{ cohort.open_spots|stringformat:"+d" }} over limit{% endif %}
+            </div>
+            <div class="small">
+              {% for child in cohort.children %}
+                <a class="me-2 d-inline-block" href="{% url 'child-planning' child.id %}">{{ child }}</a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% empty %}<div class="text-muted">No enrolled children.</div>{% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path("", views.dashboard, name="planning-dashboard"),
+    path("overview/", views.planning_overview, name="planning-overview"),
+    path("child/<int:child_id>/", views.child_planning, name="child-planning"),
 
     path(
         "moveup-form/<int:child_id>/",

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}{{ child }} · Planning{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-2 mb-4">
+  <div>
+    <h1 class="mb-1">{{ child }}</h1>
+    <p class="text-muted mb-0">Child timeline and age milestones. These dates indicate age eligibility only; actual placement follows the effective-dated plan.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="{% url 'admin:people_child_change' child.id %}">Edit child</a>
+    <a class="btn btn-outline-primary" href="{% url 'planning-dashboard' %}">Rooms</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Birth date</div><strong>{{ child.birth_date|date:"M j, Y" }}</strong></div></div></div>
+  <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Center since</div><strong>{% if center_enrollment_date %}{{ center_enrollment_date|date:"M j, Y" }}{% else %}—{% endif %}</strong></div></div></div>
+  <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Current room</div><strong>{% if placement %}{{ placement.room.name }}{% else %}Not placed{% endif %}</strong>{% if placement %}<div class="small text-muted">since {{ placement.start_date|date:"M j, Y" }}</div>{% endif %}</div></div></div>
+  <div class="col-md-3"><div class="card h-100"><div class="card-body"><div class="text-muted small">Kindergarten cohort</div><strong>Class of {{ kindergarten_year }}</strong></div></div></div>
+</div>
+
+{% if active_plan %}
+<div class="alert alert-info">
+  <strong>Planned event:</strong>
+  {% if active_plan.exit_type == 'withdrawal' %}Withdrawal{% else %}{{ active_plan.current_room.name }} → {{ active_plan.target_room.name }}{% endif %}
+  effective {{ active_plan.planned_date|date:"M j, Y" }}.
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Age milestones</strong></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0"><tbody>
+          {% for milestone in milestones %}
+            <tr><td>{{ milestone.label }}</td><td class="text-end">{{ milestone.date|date:"M j, Y" }}</td></tr>
+          {% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header"><strong>Placement history</strong></div>
+      <div class="card-body p-0">
+        <table class="table table-sm mb-0"><thead><tr><th>Room</th><th>Start</th><th>End</th></tr></thead><tbody>
+          {% for historical in placement_history %}
+            <tr><td>{{ historical.room.name }}</td><td>{{ historical.start_date|date:"M j, Y" }}</td><td>{% if historical.end_date %}{{ historical.end_date|date:"M j, Y" }}{% else %}<span class="text-muted">Current</span>{% endif %}</td></tr>
+          {% empty %}<tr><td colspan="3" class="text-muted">No placement history.</td></tr>{% endfor %}
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,4 +1,5 @@
 from datetime import date
+from django.db import transaction
 
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
@@ -13,6 +14,7 @@ from apps.classrooms.models import Room
 from .models import Placement, MoveUpPlan
 from .dashboard_logic import build_dashboard_data, build_global_stats
 from .dashboard_logic import get_center_occupancy_projections
+from .projections import build_planning_overview, child_planning_detail
 
 
 # -------------------------------------------------------
@@ -70,6 +72,25 @@ def dashboard(request):
         request,
         "planning/dashboard.html",
         context
+    )
+
+
+@login_required
+def planning_overview(request):
+    return render(
+        request,
+        "planning/overview.html",
+        build_planning_overview(),
+    )
+
+
+@login_required
+def child_planning(request, child_id):
+    child = get_object_or_404(Child, id=child_id)
+    return render(
+        request,
+        "planning/child_detail.html",
+        child_planning_detail(child),
     )
 
 # -------------------------------------------------------
@@ -279,24 +300,35 @@ def implement_moveup(request, plan_id):
         end_date__isnull=True,
     ).first()
 
-    if placement:
-        placement.end_date = now().date()
-        placement.save()
+    effective_date = plan.planned_date
+    if effective_date is None:
+        messages.error(request, "Set an effective date before implementing this transition.")
+        return _refresh_room_card(request, source_room)
 
-    if plan.exit_type == "moveup":
-
-        Placement.objects.create(
-            child=child,
-            room=target_room,
-            start_date=now().date(),
+    if placement and effective_date < placement.start_date:
+        messages.error(
+            request,
+            "The effective date cannot be before the child's current placement start date.",
         )
+        return _refresh_room_card(request, source_room)
 
-    else:
-        child.enrolled = False
-        child.save()
+    with transaction.atomic():
+        if placement:
+            placement.end_date = effective_date
+            placement.save(update_fields=["end_date"])
 
-    plan.status = "completed"
-    plan.save()
+        if plan.exit_type == "moveup":
+            Placement.objects.create(
+                child=child,
+                room=target_room,
+                start_date=effective_date,
+            )
+        else:
+            child.enrolled = False
+            child.save(update_fields=["enrolled"])
+
+        plan.status = "completed"
+        plan.save(update_fields=["status"])
 
     _transition_message(request, child, plan.exit_type, target_room)
 

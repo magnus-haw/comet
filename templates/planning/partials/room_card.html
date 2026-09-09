@@ -1,138 +1,126 @@
 <div id="room-card-{{ data.room.id }}" class="card mb-4 shadow-sm">
-  <div class="card-header bg-primary text-white d-flex justify-content-between">
+  <div class="card-header bg-primary text-white d-flex flex-wrap justify-content-between align-items-center gap-2">
     <strong>
       {{ data.room.name }}
-      <small class="text-light">
-        ({{ data.room.min_age_months }}–{{ data.room.max_age_months }} mo)
-      </small>
+      <small class="text-light">({{ data.room.min_age_months }}–{{ data.room.max_age_months }} mo)</small>
     </strong>
-
-    <span>
-      Capacity {{ data.room.capacity }}
-      | Occupancy {{ data.occupancy }}
-      | Open Seats {{ data.open_seats }}
-    </span>
+    <div class="d-flex gap-3 small">
+      {% for point in data.projections %}
+        <span><strong>{{ point.label }}</strong> {{ point.occupancy }}/{{ point.capacity }} <span class="opacity-75">({{ point.open_seats }} open)</span></span>
+      {% endfor %}
+    </div>
   </div>
 
   <div class="card-body">
-    <h5>Children</h5>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="mb-0">Current children</h5>
+      <small class="text-muted">Age status is advisory; planned events control projections.</small>
+    </div>
 
-    <table class="table table-sm table-striped">
-      <thead>
-        <tr>
-          <th>Child</th>
-          <th>Birthdate</th>
-          <th>Age</th>
-          <th>Household</th>
-          
-          <th>Tuition</th>
-          <th>Security Dep.</th>
-          <th>Status</th>
-          <th>Move-Up</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {% for item in data.children %}
+    <div class="table-responsive">
+      <table class="table table-sm table-striped align-middle">
+        <thead>
           <tr>
-            <td><a href="{% url 'admin:people_child_change' item.child.id %}">
-                {{ item.child }}</a> 
-                {% if item.child.notes %}
-                  <div class="mt-1 text-muted small">
-                    📝 {{ item.child.notes }}
-                  </div>
+            <th>Child</th>
+            <th>Age</th>
+            <th>In class since</th>
+            <th>Age status</th>
+            <th>Next planned event</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in data.children %}
+            <tr>
+              <td>
+                <a href="{% url 'child-planning' item.child.id %}"><strong>{{ item.child }}</strong></a>
+                <div class="small text-muted">{{ item.child.household.get_household_type_display }}</div>
+                {% if item.child.notes %}<div class="small text-muted">📝 {{ item.child.notes }}</div>{% endif %}
+              </td>
+              <td>{{ item.child.age_months }} mo</td>
+              <td>{{ item.placement.start_date|date:"M j, Y" }}</td>
+              <td>
+                {% if item.status_code == 'overdue' %}
+                  <span class="badge bg-danger">Over age range</span>
+                {% elif item.status_code == 'approaching' %}
+                  <span class="badge bg-warning text-dark">Approaching boundary</span>
+                {% elif item.status_code == 'ready' %}
+                  <span class="badge bg-success">Within age range</span>
+                {% else %}
+                  <span class="badge bg-secondary">Below range</span>
                 {% endif %}
-            </td>
-
-            <td>{{ item.child.birth_date }}</td>
-
-            <td>{{ item.child.age_months }} mo</td>
-
-            <td>{{ item.child.household.get_household_type_display }}</td>
-            <td>${{ item.child.tuition }}</td>
-            <td>${{ item.child.security_deposit }}</td>
-            <td>
-              {% if item.status_code == 'overdue' %}
-                <span class="badge bg-danger">Overdue</span>
-              {% elif item.status_code == 'approaching' %}
-                <span class="badge bg-warning text-dark">Approaching</span>
-              {% elif item.status_code == 'ready' %}
-                <span class="badge bg-success">Eligible</span>
-              {% else %}
-                <span class="badge bg-secondary">Early</span>
-              {% endif %}
-            </td>
-
-            <td>
-              {% if item.has_moveup_plan %}
-                <div class="d-flex gap-2 align-items-center">
+              </td>
+              <td>
+                {% if item.has_moveup_plan %}
                   {% if item.moveup_plan.exit_type == 'withdrawal' %}
-                    <span class="badge bg-secondary">Withdrawal ({{ item.moveup_plan.planned_date }})</span>
+                    <strong>Withdrawal</strong>
                   {% else %}
-                    <span class="badge bg-info">
-                      Planned → {{ item.moveup_plan.target_room.name }}
-                      ({{ item.moveup_plan.planned_date }})
-                    </span>
+                    <strong>Move → {{ item.moveup_plan.target_room.name }}</strong>
                   {% endif %}
-
-                  {% if item.ready_to_implement %}
-                    <button class="btn btn-sm btn-success" hx-post="/planning/implement-moveup/{{ item.moveup_plan.id }}/" hx-confirm="Implement this move-up?" hx-target="#room-card-{{ data.room.id }}" hx-swap="outerHTML">Implement</button>
-                  {% endif %}
-
-                  <button class="btn btn-sm btn-outline-secondary" hx-get="/planning/edit-moveup/{{ item.moveup_plan.id }}/" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#modal">Edit</button>
-
-                  <button class="btn btn-sm btn-outline-danger" hx-post="/planning/cancel-moveup/{{ item.moveup_plan.id }}/" hx-target="#room-card-{{ data.room.id }}" hx-swap="outerHTML" hx-confirm="Cancel this move-up plan?">Cancel</button>
-                </div>
-                {% if item.moveup_plan.teacher_notes %}
-                  <div class="mt-1 text-muted small">
-                    📝 {{ item.moveup_plan.teacher_notes }}
-                  </div>
+                  <div class="small">Effective {{ item.moveup_plan.planned_date|date:"M j, Y" }}</div>
+                  {% if item.moveup_plan.teacher_notes %}<div class="small text-muted">{{ item.moveup_plan.teacher_notes }}</div>{% endif %}
+                {% else %}
+                  <span class="text-muted">None planned</span>
                 {% endif %}
+              </td>
+              <td class="text-nowrap">
+                {% if item.has_moveup_plan %}
+                  {% if item.ready_to_implement %}
+                    <button class="btn btn-sm btn-success" hx-post="/planning/implement-moveup/{{ item.moveup_plan.id }}/" hx-confirm="Implement this effective-dated change?" hx-target="#room-card-{{ data.room.id }}" hx-swap="outerHTML">Implement</button>
+                  {% endif %}
+                  <button class="btn btn-sm btn-outline-secondary" hx-get="/planning/edit-moveup/{{ item.moveup_plan.id }}/" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#modal">Edit</button>
+                  <button class="btn btn-sm btn-outline-danger" hx-post="/planning/cancel-moveup/{{ item.moveup_plan.id }}/" hx-target="#room-card-{{ data.room.id }}" hx-swap="outerHTML" hx-confirm="Cancel this plan?">Cancel</button>
+                {% else %}
+                  <button class="btn btn-sm btn-outline-primary" hx-get="/planning/moveup-form/{{ item.child.id }}/?room_id={{ data.room.id }}" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#modal">Plan change</button>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6" class="text-center text-muted">No children in this room today</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="row g-3 mt-1">
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <h6>Incoming · next 60 days</h6>
+          {% for plan in data.incoming_plans %}
+            <div class="mb-2">
+              <a href="{% url 'child-planning' plan.child.id %}">{{ plan.child }}</a>
+              <span class="text-muted">from {{ plan.current_room.name }}</span>
+              <strong class="float-end">{{ plan.planned_date|date:"M j" }}</strong>
+            </div>
+          {% endfor %}
+          {% for placement in data.future_placements %}
+            <div class="mb-2">
+              <a href="{% url 'child-planning' placement.child.id %}">{{ placement.child }}</a>
+              <span class="text-muted">scheduled placement</span>
+              <strong class="float-end">{{ placement.start_date|date:"M j" }}</strong>
+            </div>
+          {% endfor %}
+          {% if not data.incoming_plans and not data.future_placements %}<div class="text-muted small">No scheduled arrivals.</div>{% endif %}
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="border rounded p-3 h-100">
+          <h6>Leaving · next 60 days</h6>
+          {% for plan in data.outgoing_plans %}
+            <div class="mb-2">
+              <a href="{% url 'child-planning' plan.child.id %}">{{ plan.child }}</a>
+              {% if plan.exit_type == 'withdrawal' %}
+                <span class="text-muted">withdrawal</span>
               {% else %}
-                <button class="btn btn-sm btn-outline-primary" hx-get="/planning/moveup-form/{{ item.child.id }}/?room_id={{ data.room.id }}" hx-target="#modal-body" data-bs-toggle="modal" data-bs-target="#modal">Plan Move-Up</button>
+                <span class="text-muted">→ {{ plan.target_room.name }}</span>
               {% endif %}
-            </td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="6" class="text-center text-muted">No children assigned</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-
-    <h5 class="mt-4">Upcoming Move-Ups</h5>
-
-    <table class="table table-sm table-bordered">
-      <thead>
-        <tr>
-          <th>Child</th>
-          <th>Target</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        {% for move in data.upcoming_moveups %}
-          <tr>
-            <td>{{ move.child }}</td>
-
-            <td>
-              {% if move.exit_type == 'moveup' %}
-                {{ move.target_room.name }}
-              {% else %}
-                Withdrawal
-              {% endif %}
-            </td>
-
-            <td>{{ move.planned_date }}</td>
-          </tr>
-        {% empty %}
-          <tr>
-            <td colspan="3">None</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+              <strong class="float-end">{{ plan.planned_date|date:"M j" }}</strong>
+            </div>
+          {% empty %}
+            <div class="text-muted small">No scheduled departures.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
   </div>
 </div>

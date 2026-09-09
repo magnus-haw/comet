@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "comet"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "asgiref==3.8.1",
+    "dj-database-url==3.1.2",
+    "Django==5.1.6",
+    "django-extensions==3.2.3",
+    "gunicorn==23.0.0",
+    "packaging==24.2",
+    "psycopg==3.3.4",
+    "psycopg-binary==3.3.4",
+    "python-dateutil==2.9.0.post0",
+    "python-decouple==3.8",
+    "six==1.17.0",
+    "sqlparse==0.5.3",
+    "typing_extensions==4.15.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "apps*",
+    "comet*",
+    "services*",
+]
+exclude = [
+    "templates*",
+    "tests*",
+]
